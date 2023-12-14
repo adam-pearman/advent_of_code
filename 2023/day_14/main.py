@@ -55,10 +55,10 @@ for i in range(iterations):
         for index, line in enumerate(lines):
             lines[index] = move_rocks(line, direction)
     load = calculate_load(lines)
-    if lines.__str__() in lookup:
-        restart = lines.__str__()
+    if str(lines) in lookup:
+        restart = str(lines)
         break
-    lookup[lines.__str__()] = load
+    lookup[str(lines)] = load
 
 loop_length = len(lookup) - list(lookup.keys()).index(restart)
 loop_offset = len(lookup) - loop_length
