@@ -1,5 +1,5 @@
 from collections import deque
-from math import lcm, sqrt
+from math import lcm
 
 with open('day_20/input.txt') as f:
     config = [line.strip('\n') for line in f.readlines()]
@@ -9,6 +9,7 @@ conjunctions = {}
 vd_inputs = {}
 
 def set_modules():
+    broadcaster = []
     for line in config:
         line = line.split(' -> ')
         module = line[0]
@@ -61,14 +62,6 @@ def update_conjunction(module, frequency, input):
 
     for destination in conjunctions[module]['destinations']:
         q.append([destination, output, module])
-
-def is_prime(n):
-    if n <= 1:
-        return False
-    for i in range(2, int(sqrt(n)) + 1):
-        if n % i == 0:
-            return False
-    return True
 
 def run(iterations):
     button_presses = 0
