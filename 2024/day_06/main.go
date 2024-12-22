@@ -2,17 +2,17 @@ package main
 
 import (
 	"fmt"
-	"maps"
 	"os"
 	"slices"
 	"strings"
+	"sync"
 )
 
 func walk(guard [3]int, xObstacles map[int][]int, yObstacles map[int][]int, lines []string) ([][3]int, bool) {
 	visited := [][3]int{guard}
 	direction := "UP"
 
-	for true {
+	for {
 		if direction == "UP" {
 			destination := -1
 			if len(xObstacles[guard[0]]) > 0 {
@@ -107,40 +107,12 @@ func walk(guard [3]int, xObstacles map[int][]int, yObstacles map[int][]int, line
 	return visited, false
 }
 
-func part1(guard [3]int, xObstacles map[int][]int, yObstacles map[int][]int, lines []string) {
-	visited, _ := walk(guard, xObstacles, yObstacles, lines)
-	unique := map[[2]int]bool{}
-	for _, v := range visited {
-		unique[[2]int{v[0], v[1]}] = true
+func deepCloneMap(m map[int][]int) map[int][]int {
+	clone := map[int][]int{}
+	for k, v := range m {
+		clone[k] = append([]int(nil), v...)
 	}
-	fmt.Println("Part 1:", len(unique))
-}
-
-func part2(guard [3]int, xObstacles map[int][]int, yObstacles map[int][]int, lines []string) {
-	visited, _ := walk(guard, xObstacles, yObstacles, lines)
-	unique := map[[2]int]bool{}
-	for _, v := range visited {
-		unique[[2]int{v[0], v[1]}] = true
-	}
-	count := 0
-
-	for square := range unique {
-		if square[0] == guard[0] && square[1] == guard[1] {
-			continue
-		}
-		xObs := maps.Clone(xObstacles)
-		yObs := maps.Clone(yObstacles)
-		xObs[square[0]] = append(xObs[square[0]], square[1])
-		slices.Sort(xObs[square[0]])
-		yObs[square[1]] = append(yObs[square[1]], square[0])
-		slices.Sort(yObs[square[1]])
-		_, loops := walk(guard, xObs, yObs, lines)
-		if loops {
-			count++
-		}
-	}
-
-	fmt.Println("Part 2:", count)
+	return clone
 }
 
 func main() {
@@ -164,6 +136,37 @@ func main() {
 		}
 	}
 
-	part1(guard, xObstacles, yObstacles, lines)
-	part2(guard, xObstacles, yObstacles, lines)
+	visited, _ := walk(guard, xObstacles, yObstacles, lines)
+	unique := map[[2]int]bool{}
+	for _, v := range visited {
+		unique[[2]int{v[0], v[1]}] = true
+	}
+	fmt.Println("Part 1:", len(unique))
+
+	var wg sync.WaitGroup
+
+	count := 0
+	for square := range unique {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if square[0] == guard[0] && square[1] == guard[1] {
+				return
+			}
+			xObs := deepCloneMap(xObstacles)
+			yObs := deepCloneMap(yObstacles)
+			xObs[square[0]] = append(xObs[square[0]], square[1])
+			yObs[square[1]] = append(yObs[square[1]], square[0])
+			slices.Sort(xObs[square[0]])
+			slices.Sort(yObs[square[1]])
+			_, loops := walk(guard, xObs, yObs, lines)
+			if loops {
+				count++
+			}
+		}()
+	}
+
+	wg.Wait()
+
+	fmt.Println("Part 2:", count)
 }
