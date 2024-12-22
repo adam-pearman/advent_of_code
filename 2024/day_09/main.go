@@ -96,6 +96,7 @@ func part2(input string) {
 					for k := j; k < len(spaces); k++ {
 						spaces[k]++
 					}
+					i++
 				}
 				break
 			}
